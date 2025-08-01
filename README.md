@@ -54,3 +54,6 @@ Purpose and Vision
 Monthera Vault is designed to bootstrap and grow the $MTHR ecosystem by ensuring fair distribution of tokens through on-chain staking. The protocol ensures that the vast majority of token supply (85%) is only accessible via real user participation—encouraging decentralized ownership and aligned incentives.
 
 By combining fixed tokenomics, a transfer-friendly vault system, and permissionless participation, Monthera Vault aims to create a sustainable and fair foundation for $MTHR token circulation.
+
+Website : https://monthera.xyz/
+X : https://x.com/MontheraVault/
