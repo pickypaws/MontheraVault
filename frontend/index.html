@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+ <head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Monthera Vault</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="icon" href="img/monthera-logo-clear.png" type="image/png" />
+  <link rel="stylesheet" href="css/style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Oxanium:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.0/css/all.min.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+ </head>
+ <body>
+  <div id="notification" class="fixed top-4 left-4 z-50 hidden"></div>
+  <div id="txNotificationBar" class="tx-notification-bar">
+   <div id="txNotifStatus" class="tx-notif-status"></div>
+   <a id="txNotifLink" href="#" target="_blank" class="tx-notif-link">View on explorer</a>
+  </div>
+  <div id="toggleSidebar" class="menu-toggle">
+   <span class="bar"></span>
+   <span class="bar"></span>
+   <span class="bar"></span>
+  </div>
+  <div class="page-title-wrapper" style="text-align: center; margin-top: 12px;">
+   <img src="/img/monthera-logo-clear.png" alt="Monthera Logo" class="logo-monthera" />
+   <h1 class="page-title">MONTHERA</h1>
+   <p class="subtext"> Monthera Vault is a non-custodial staking protocol on Monad Testnet, <br> allowing $MTHR holders to earn sustainable on-chain rewards via secure ERC4626 vaults. </p>
+  </div>
+  <div id="sidebar" class="sidebar">
+   <div class="sidebar-item">
+    <a href="https://testnet.monad.xyz/" target="_blank" class="sidebar-link">Faucet</a>
+   </div>
+   <div class="sidebar-item">
+    <a href="https://swap.bean.exchange/swap?outputCurrency=0xa2e6609876D77415Fa4097A05C07884e9FAA585F" target="_blank" class="sidebar-link">Swap</a>
+   </div>
+   <div class="sidebar-item">
+    <a href="https://github.com/pickypaws/MontheraVault/" target="_blank" class="sidebar-link">GitHub</a>
+   </div>
+   <div class="sidebar-item">
+    <a href="https://x.com/MontheraVault/" target="_blank" class="sidebar-link">X</a>
+   </div>
+   <div class="sidebar-item">
+    <a href="/readme" class="sidebar-link">Readme</a>
+   </div>
+  </div>
+  <div class="wallet-button">
+   <button id="connectButton">
+    <span id="connectText">Connect Wallet</span>
+    <span id="connectIcon"></span>
+   </button>
+  </div>
+  <div id="vaultStatsWrapper">
+   <h3 class="dashboard-title">Vault Overview</h3>
+   <div class="divider"></div>
+   <div class="stat-grid">
+    <div class="stat-box">
+     <div class="tooltip-wrapper">
+      <span class="tooltip-icon">?</span>
+      <span class="tooltip-text">Total $MTHR currently held in the vault, including staked and unlocked rewards</span>
+     </div>
+     <div class="stat-title">Total Assets</div>
+     <div class="stat-value2" id="vaultTotalAssets">Loading...</div>
+    </div>
+    <div class="stat-box">
+     <div class="tooltip-wrapper">
+      <span class="tooltip-icon">?</span>
+      <span class="tooltip-text">Vault Emissions are unreleased $MTHR tokens stored in the vault</span>
+     </div>
+     <div class="stat-title">Vault Emissions</div>
+     <div class="stat-value2" id="vaultRewardPool">Loading...</div>
+    </div>
+    <div class="stat-box">
+     <div class="tooltip-wrapper">
+      <span class="tooltip-icon">?</span>
+      <span class="tooltip-text">Total $sMTHR minted to represent all users staked $MTHR</span>
+     </div>
+     <div class="stat-title">Total Shares</div>
+     <div class="stat-value2" id="vaultTotalMint">Loading...</div>
+    </div>
+    <div class="stat-box">
+     <div class="tooltip-wrapper">
+      <span class="tooltip-icon">?</span>
+      <span class="tooltip-text">Estimated annual return based on current $MTHR emissions and total staked</span>
+     </div>
+     <div class="stat-title">APR</div>
+     <div class="stat-value2" id="vaultAPR">Loading...</div>
+    </div>
+   </div>
+  </div>
+  <div class="vault-container">
+   <div id="stakeHeaderGuest" class="fade-in">
+    <h3 class="dashboard-title">Stake to Earn</h3>
+    <div class="divider"></div>
+    <p class="subtext2">Unlock staking to begin earning sustainable on-chain rewards.</p>
+   </div>
+   <div id="userInfoSection" class="fade-out" style="width: 100%; font-size: 0.9rem; color: #fff; margin-bottom: 0.1rem; max-width: 420px;">
+    <h3 class="dashboard-title">Staking Overview</h3>
+    <div class="divider"></div>
+    <div class="stat-line">
+     <strong class="font-prompt stat-label">Balance</strong>
+     <div class="stat-value" style="position: relative;">
+      <span class="colon">:</span>
+      <span id="balance" class="font-oxanium">Loading...</span>
+      <span id="balance-flyup" class="flyup-text font-oxanium"></span>
+      <span id="balance-flydown" class="flydown-text font-oxanium"></span>
+     </div>
+    </div>
+    <div class="stat-line">
+     <strong class="font-prompt stat-label">Shares</strong>
+     <div class="stat-value" style="position: relative;">
+      <span class="colon">:</span>
+      <span id="staked" class="font-oxanium">Loading...</span>
+      <span id="shared-flyup" class="flyup-text font-oxanium"></span>
+      <span id="shared-flydown" class="flydown-text font-oxanium"></span>
+     </div>
+    </div>
+    <div class="stat-line">
+     <strong class="font-prompt stat-label">Rewards</strong>
+     <div class="stat-value" style="position: relative;">
+      <span class="colon">:</span>
+      <span id="reward" class="font-oxanium">Loading...</span>
+      <span id="reward-flydown" class="flydown-text font-oxanium"></span>
+     </div>
+    </div>
+   </div>
+   <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+    <div style="margin-top: -6px; margin-bottom: -25px; margin-left: 1px;">
+     <label for="stakeAmount" style="color: white; font-size: 14px; font-weight: 400; font-family: 'Prompt', sans-serif;"> Amount: </label>
+    </div>
+    <div class="percentage-buttons" style="margin-bottom: -10px;">
+     <button onclick="fillDepositPercentage(25)">25%</button>
+     <button onclick="fillDepositPercentage(50)">50%</button>
+     <button onclick="fillDepositPercentage(75)">75%</button>
+     <button onclick="fillDepositPercentage(100)">MAX</button>
+    </div>
+   </div>
+   <input type="number" id="stakeAmount" placeholder="0.00" class="w-full rounded-md px-3 py-2 text-black font-oxanium bg-white border border-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-400" />
+   <div style="margin-left: -12px; margin-top: -15px; margin-bottom: -20px; text-align: left; width: 100%; display: flex; align-items: center; gap: 4px; font-size: 0.7rem;">
+    <img src="img/bean-logo-clear.png" alt="Bean" class="swap-icon" />
+    <span style="color: #ccc; font-family: 'Prompt' sans-serif; font-weight: 400;">Swap $MTHR on</span>
+    <a href="https://swap.bean.exchange/swap?outputCurrency=0xa2e6609876D77415Fa4097A05C07884e9FAA585F" target="_blank" style="color: #818cf8; font-size: 0.75rem; font-family: 'Prompt' sans-serif; font-weight: bold; text-decoration: none;"> Bean Exchange </a>
+    <span style="color: #ccc;">↗</span>
+   </div>
+   <div class="button-row">
+    <button id="stakeBtn">Deposit</button>
+    <button id="redeemBtn">Redeem</button>
+   </div>
+   <button id="claimBtn" class="full-button">Claim</button>
+   <div id="redeemStep1" class="modal" style="display:none;">
+    <div class="modal-content">
+     <span id="closeRedeemPopup" class="close-btn">
+      <i class="fas fa-times" style="color: red; font-size: 20px; transition: transform 0.2s ease;"></i>
+     </span>
+     <h3>Redeem Vault Shares</h3>
+     <div class="divider"></div>
+     <div style="display: flex; align-items: center; margin-top: 15px; margin-bottom: 0px;">
+      <span class="stat-label-modal" style="min-width: 10px;"> Balance </span>
+      <span style="font-family: 'Oxanium', sans-serif; font-size: 0.95rem; font-weight: 600; color: white; margin: 0 6px;">:</span>
+      <span id="vaultBalanceAmount" class="stat-value-modal" style="font-family: 'Oxanium', sans-serif; font-size: 0.95rem; font-weight: 600; color: white;"> 0.00 </span>
+     </div>
+     <div style="display: flex; align-items: center; margin-bottom: 1rem; margin-top: 8.5px;">
+      <span class="stat-label-modal" style="min-width: 10px;"> Shares </span>
+      <div style="display: flex; align-items: center; margin-left: 15px;">
+       <span style="font-family: 'Oxanium', sans-serif; font-size: 0.95rem; font-weight: 600; color: white; margin-right: 6px;">:</span>
+       <span id="vaultBalanceInfo" class="stat-value-modal" style="font-family: 'Oxanium', sans-serif; font-size: 0.95rem; font-weight: 600; color: white;"> 0.00 </span>
+      </div>
+     </div>
+     <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 6px; margin-bottom: 4px;">
+      <label for="redeemVaultInput" style="
+    color: white;
+    font-size: 14px;
+    font-weight: 400;
+    font-family: 'Prompt', sans-serif;
+    margin-left: 1px;
+  "> Amount: </label>
+      <div style="display: flex; gap: 4px;">
+       <button onclick="fillPercentage(25)" class="percentage-btn">25%</button>
+       <button onclick="fillPercentage(50)" class="percentage-btn">50%</button>
+       <button onclick="fillPercentage(75)" class="percentage-btn">75%</button>
+       <button onclick="fillPercentage(100)" class="percentage-btn">MAX</button>
+      </div>
+     </div>
+     <input type="text" id="redeemVaultInput" placeholder="0.00" inputmode="decimal" pattern="[0-9]*" oninput="this.value = this.value.replace(/[^0-9.]/g, '')" />
+     <div style="font-size: 11px; color: #ccc; margin-top: 4px; margin-bottom: 8px; text-align: center;"> *Select the portion of your $sMTHR to redeem </div>
+     <button id="nextRedeemBtn" style="width:100%; background:#4f46e5; color:white; padding:10px; font-family: 'Prompt', sans-serif; font-size: 16px; font-weight: 600; border:none; border-radius:8px; margin-top:10px;"> Next </button>
+    </div>
+   </div>
+   <div id="redeemStep2" class="modal" style="display:none;">
+    <div class="modal-content">
+     <h3>Preview Redeem</h3>
+     <div class="divider"></div>
+     <div style="display: flex; align-items: center; margin-top: 12px;">
+      <span style="font-family: 'Prompt', sans-serif; font-size: 0.95rem; font-weight: 600; color: white; min-width: 50px;"> Burn </span>
+      <div style="display: flex; align-items: center; margin-left: 9px;">
+       <span style="font-family: 'Oxanium', sans-serif; font-size: 0.95rem; font-weight: 600; color: white; margin: 0 6px;">:</span>
+       <span id="redeemBurningValue" style="font-family: 'Oxanium', sans-serif; font-size: 0.95rem; font-weight: 600; color: white;"> ... </span>
+      </div>
+     </div>
+     <div style="display: flex; align-items: center; margin-top: 8px;">
+      <span style="font-family: 'Prompt', sans-serif; font-size: 0.95rem; font-weight: 600; color: white; min-width: 50px;"> Receive </span>
+      <span style="font-family: 'Oxanium', sans-serif; font-size: 0.95rem; font-weight: 600; color: white; margin: 0 6px;">:</span>
+      <span id="redeemEstimateValue" style="font-family: 'Oxanium', sans-serif; font-size: 0.95rem; font-weight: 600; color: white;"> ... </span>
+     </div>
+     <p style="margin-top: 1.4rem; margin-bottom: -15px; font-size: 11px; font-family: 'Prompt', sans-serif; color: #ffffff;"> *This operation is final and cannot be reversed </p>
+     <div class="actions">
+      <button id="cancelRedeemBackBtn" style="background-color: #6b7280; color: white; padding: 8px 16px; border-radius: 8px; border: none; font-weight: bold; font-family: 'Prompt', sans-serif; font-size: 16px;"> Cancel </button>
+      <button id="confirmRedeemFinalBtn" style="background-color: #10b981; color: white; padding: 8px 16px; border-radius: 8px; border: none; font-weight: bold; font-family: 'Prompt', sans-serif; font-size: 16px;"> Confirm </button>
+     </div>
+    </div>
+   </div>
+   <div id="previewDepositModal" class="modal">
+    <div class="modal-content">
+     <h3>Preview Deposit</h3>
+     <div class="divider"></div>
+     <div class="stat-line-modal">
+      <strong class="stat-label-modal">Deposit</strong>
+      <div class="stat-value-modal">
+       <span class="colon-modal">:</span>
+       <span id="previewDepositAmount">-</span>
+       <span>$MTHR</span>
+      </div>
+     </div>
+     <div class="stat-line-modal">
+      <strong class="stat-label-modal">Shares</strong>
+      <div class="stat-value-modal">
+       <span class="colon-modal">:</span>
+       <span id="previewDepositShares">-</span>
+       <span>$sMTHR</span>
+      </div>
+     </div>
+     <div class="stat-line-modal">
+      <strong class="stat-label-modal">Reward Rate</strong>
+      <div class="stat-value-modal">
+       <span class="colon-modal">:</span>
+       <span id="previewDepositRewardRate">-</span>
+       <span>$MTHR/s</span>
+      </div>
+     </div>
+     <div class="stat-line-modal">
+      <strong class="stat-label-modal">Estimated APR</strong>
+      <div class="stat-value-modal">
+       <span class="colon-modal">:</span>
+       <span id="previewDepositAPR">-</span>
+       <span>%</span>
+      </div>
+     </div>
+     <p style="margin-top: 1.4rem; margin-bottom: -15px; font-size: 11px; font-family: 'Prompt', sans-serif; color: #ffffff;"> *This operation is final and cannot be reversed</p>
+     <div class="actions" style="display: flex; gap: 10px;">
+      <button id="cancelDepositBtn" class="button-action" style="background-color: #6b7280; color: white; padding: 8px 16px; border-radius: 8px; border: none; font-weight: bold; font-family: 'Prompt', sans-serif; font-size: 16px;"> Cancel </button>
+      <button id="confirmDepositBtn" class="button-action" style="background-color: #10b981; color: white; padding: 10px 16px; border-radius: 8px; border: none; font-weight: bold; font-family: 'Prompt', sans-serif; font-size: 16px;"> Confirm </button>
+     </div>
+    </div>
+   </div>
+   <div style="height: 0px;"></div>
+   <div id="interactionBlocker" style="
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  z-index: 9999;
+  background: transparent;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+"></div>
+   <script>
+    document.querySelectorAll("button").forEach(btn => {
+     btn.addEventListener("click", (e) => {
+      if (btn.disabled || btn.classList.contains("loading") || btn.classList.contains("success") || btn.classList.contains("error")) return;
+      btn.classList.add("clicked");
+      setTimeout(() => {
+       btn.classList.remove("clicked");
+      }, 150);
+     });
+    });
+   </script>
+   <footer style="
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  text-align: center;
+  font-size: 0.85rem;
+  color: #ccc;
+  padding: 16px 0;
+  background: transparent;
+  z-index: -1;
+"> &copy; 2025 Monthera. Built on Monad Testnet. </footer>
+   <script defer src="js/app.js"></script>
+ </body>
+</html>
