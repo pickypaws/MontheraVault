@@ -1,6 +1,6 @@
 Monthera Vault Overview
 
-Monthera Vault is a non-custodial staking protocol deployed on the Monad Testnet. It is designed to distribute the native token $MTHR through a transparent, on-chain reward mechanism based on the ERC4626 vault standard. The core idea is to enable users to earn uncirculated $MTHR tokens by staking the same token via a controlled, fixed-reward system.
+Monthera Vault is a non-custodial staking protocol deployed on the Monad Testnet. It is designed to distribute $MTHR token through a transparent, on-chain reward mechanism based on the ERC4626 vault standard. The core idea is to enable users to earn uncirculated $MTHR tokens by staking the same token via a controlled, fixed-reward system.
 
 
 Token Distribution and Supply Allocation
