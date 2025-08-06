@@ -14,6 +14,7 @@
  </head>
  <body>
   <div id="notification" class="fixed top-4 left-4 z-50 hidden"></div>
+  <div id="notification-wallet" class="z-50 hidden"></div>
   <div id="txNotificationBar" class="tx-notification-bar">
    <div id="txNotifStatus" class="tx-notif-status"></div>
    <a id="txNotifLink" href="#" target="_blank" class="tx-notif-link">View on explorer</a>
@@ -35,6 +36,9 @@
    <div class="sidebar-item">
     <a href="https://swap.bean.exchange/swap?outputCurrency=0xa2e6609876D77415Fa4097A05C07884e9FAA585F" target="_blank" class="sidebar-link">Swap</a>
    </div>
+   <div class="sidebar-item">
+  <button id="openClaimPopup" class="sidebar-link">Claim $MTHR</button>
+  </div>
    <div class="sidebar-item">
     <a href="https://github.com/pickypaws/MontheraVault/" target="_blank" class="sidebar-link">GitHub</a>
    </div>
@@ -263,6 +267,33 @@
   opacity: 0;
   transition: opacity 0.2s ease;
 "></div>
+  <div id="claimPopup" class="modal" style="display: none;">
+  <div class="modal-content">
+    <h3>Claim</h3>
+    <div class="divider"></div>
+    <div class="stat-line-modal">
+  <strong class="stat-label-claim-modal">Available Supply</strong>
+  <div class="stat-value-modal">
+    <span class="colon-modal">:</span>
+    <span id="claimAvailableInfo">Loading...</span>
+  </div>
+  </div>
+    <div class="stat-line-modal">
+  <strong class="stat-label-claim-modal">Available Claims</strong>
+  <div class="stat-value-modal">
+    <span class="colon-modal">:</span>
+    <span id="userClaimInfo">Loading...</span>
+  </div>
+  </div>
+    <p style="font-size: 11px; font-family: 'Prompt', sans-serif; color: white; margin-bottom: -15px; margin-top: 1.4rem;">
+      *You can claim free $MTHR token once per wallet
+    </p>
+    <div class="actions" style="display: flex; gap: 10px;">
+      <button id="closeClaimPopup" class="button-action" style="background-color: #6b7280; color: white; padding: 10px 16px; border-radius: 8px; font-family: 'Prompt', sans-serif; font-size: 16.5px;">Cancel</button>
+      <button id="tokenClaimBtn" class="button-action" style="background-color: #10b981; color: white; padding: 10px 16px; border-radius: 8px; font-family: 'Prompt', sans-serif; font-size: 16.5px;">Claim</button>
+      </div>
+    </div>
+  </div>
    <script>
     document.querySelectorAll("button").forEach(btn => {
      btn.addEventListener("click", (e) => {
