@@ -2,18 +2,23 @@ Monthera Vault Overview
 
 Monthera Vault is a non-custodial staking protocol deployed on the Monad Testnet. It is designed to distribute the native token $MTHR through a transparent, on-chain reward mechanism based on the ERC4626 vault standard. The core idea is to enable users to earn uncirculated $MTHR tokens by staking the same token via a controlled, fixed-reward system.
 
+
 Token Distribution and Supply Allocation
 
 The total supply of $MTHR is pre-minted and distributed with the following allocation:
 
 85% of the total supply is allocated directly to the reward pool inside the vault.
 
-10% is reserved for liquidity provisioning on decentralized exchanges (DEXes), of which 3% is currently provided and 7% held in reserve.
+10% is allocated for liquidity provisioning on decentralized exchanges (DEXes), of which 3% is currently deployed and 7% is held in reserve for future liquidity support.
 
-5% is allocated to the development team.
+4% is allocated to the core development team to support the ongoing development of the ecosystem.
 
+2% is used as an initial staking seed to bootstrap the vault and encourage early participation.
+
+1% is distributed freely through a public claim feature available to all wallet addresses.
 
 No additional minting of $MTHR will occur after the initial deployment, ensuring a fixed total supply. Only staking through Monthera Vault enables users to unlock the 85% of $MTHR that is locked in the reward pool.
+
 
 Staking and Reward Mechanism
 
