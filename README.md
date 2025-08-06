@@ -11,9 +11,7 @@ The total supply of $MTHR is pre-minted and distributed with the following alloc
 
 10% is allocated for liquidity provisioning on decentralized exchanges (DEXes), of which 3% is currently deployed and 7% is held in reserve for future liquidity support.
 
-4% is allocated to the core development team to support the ongoing development of the ecosystem.
-
-2% is used as an initial staking seed to bootstrap the vault and encourage early participation.
+4% is allocated to the core development team, including 2% used to bootstrap the vault through initial staking and encourage early participation.
 
 1% is distributed freely through a public claim feature available to all wallet addresses.
 
