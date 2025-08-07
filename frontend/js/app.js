@@ -11,6 +11,7 @@ let rewardLoopStarted = false;
 
 const VAULT_ADDRESS = "0xa615e83Fa5b5311F72e1fB419D66cC23E88c2059";
 const TOKEN_ADDRESS = "0xa2e6609876D77415Fa4097A05C07884e9FAA585F";
+const CLAIM_ADDRESS = "0x538FAc2d24c441B40D1c807F7Fe6E60b984188dD";
 const publicProvider = new ethers.providers.JsonRpcProvider("https://testnet-rpc.monad.xyz");
 const shortWalletText = (addr) => addr ? addr.slice(0, 6) + "..." + addr.slice(-4) : "";
 
@@ -95,6 +96,76 @@ document.addEventListener("DOMContentLoaded", async function() {
 			stakeInput.style.transform = "translateX(0)";
 		}
 	});
+	
+	document.getElementById("closeClaimPopup").addEventListener("click", () => {
+	hideModal("claimPopup");
+});
+
+document.getElementById("tokenClaimBtn").addEventListener("click", async () => {
+	const claimBtn = document.getElementById("tokenClaimBtn");
+	const closeBtn = document.getElementById("closeClaimPopup");
+	const originalText = claimBtn.innerHTML;
+
+	claimBtn.disabled = true;
+	closeBtn.disabled = true;
+	claimBtn.innerHTML = `
+	<div style="display: flex; justify-content: center; align-items: center; width: 100%;">
+		<span>Processing</span>
+		<span id="dots-loading-claim" style="display: inline-block; width: 1ch; font-family: monospace; margin-left: 0.5px;"></span>
+	</div>
+	`;
+
+	const dotsEl = document.getElementById("dots-loading-claim");
+	let dotCount = 0;
+	const maxDots = 3;
+	const intervalId = setInterval(() => {
+	dotCount = (dotCount + 1) % (maxDots + 1);
+	dotsEl.textContent = ".".repeat(dotCount);
+	}, 400);
+
+	try {
+	const tx = await claimContract.claim();
+	await tx.wait();
+	clearInterval(intervalId);
+
+	const rawAmount = await claimContract.CLAIM_AMOUNT();
+	const amount = parseFloat(ethers.utils.formatUnits(rawAmount, 18));
+
+	claimBtn.innerHTML = `
+	<span class="fade-icon small">
+	<i class="fas fa-check-circle"></i>
+	</span>
+`;
+	closeBtn.disabled = false;
+
+	setTimeout(() => {
+		hideModal("claimPopup");
+
+		showFlyUpBalance(amount);
+		refreshUI();
+	}, 2000);
+
+	showTxBarNotification("success", tx.hash, "Claim token");
+
+	} catch (err) {
+	clearInterval(intervalId);
+	console.error(err);
+
+	claimBtn.innerHTML = `
+		<span class="fade-icon small">
+		<i class="fas fa-times-circle"></i>
+		</span>
+	`;
+
+	setTimeout(() => {
+		claimBtn.innerHTML = originalText;
+		claimBtn.disabled = false;
+		closeBtn.disabled = false;
+	}, 2000);
+
+	showTxBarNotification("error", "", "Claim token");
+  }
+});
 
 	let loadingInterval;
 	const dotStates = ['.', '..', '...', ''];
@@ -139,19 +210,19 @@ document.addEventListener("DOMContentLoaded", async function() {
 			if (loadingInterval) clearInterval(loadingInterval);
 			clearConnectButton();
 			button.innerHTML = `
-  <span id="connectText" style="color: white;"></span>
-  <span id="connectIcon" style="margin-left: 6px;"></span>
+	<span id="connectText" style="color: white;"></span>
+	<span id="connectIcon" style="margin-left: 6px;"></span>
 `;
 			const connectText = document.getElementById("connectText");
 			const connectIcon = document.getElementById("connectIcon");
 			connectText.innerText = shortWalletText(userAddress);
 			connectIcon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg"
-  fill="none"
-  viewBox="0 0 24 24"
-  stroke-width="2"
-  stroke="white"
-  style="width: 18px; height: 18px;">
-  <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7" />
+	fill="none"
+	viewBox="0 0 24 24"
+	stroke-width="2"
+	stroke="white"
+	style="width: 18px; height: 18px;">
+	<path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7" />
 </svg>`;
 			fadeToUserInfo();
 			await loadContracts();
@@ -169,7 +240,7 @@ document.addEventListener("DOMContentLoaded", async function() {
 		await loadContracts();
 	}
 	await updateVaultPublicStats();
-	setInterval(updateVaultPublicStats, 3000);
+	setInterval(updateVaultPublicStats, 1500);
 	window.addEventListener("beforeunload", () => {
 		isPageUnloading = true;
 	});
@@ -185,9 +256,20 @@ document.addEventListener("DOMContentLoaded", async function() {
 async function refreshUI() {
 	try {
 		await loadInfo();
+		await loadContracts();
 		enableActionButtons();
 	} catch (error) {
-		console.error("Gagal refresh UI:", error);
+		console.error("Refresh UI failed:", error);
+	}
+}
+
+async function refreshContracts() {
+	try {
+		await loadInfo();
+		await loadContracts();
+		updateClaimSupplyInfo();
+	} catch (error) {
+		console.error("Refresh contracts failed:", error);
 	}
 }
 
@@ -195,11 +277,26 @@ function resetUI() {
 	document.getElementById("balance").textContent = "Loading...";
 	document.getElementById("staked").textContent = "Loading...";
 	document.getElementById("reward").textContent = "Loading...";
+
 	["stakeBtn", "redeemBtn", "claimBtn"].forEach(id => {
 		const btn = document.getElementById(id);
 		btn.classList.add("wallet-warning");
 	});
+
+	const oldBtn = document.getElementById("openClaimPopup");
+	const newBtn = oldBtn.cloneNode(true);
+	newBtn.id = "openClaimPopup";
+	oldBtn.replaceWith(newBtn);
+
+	newBtn.disabled = false;
+	newBtn.addEventListener("click", (e) => {
+	e.preventDefault();
+	e.stopPropagation();
+	showNotification("Wallet not found", "error");
+});
+
 	toggleLockVisuals();
+
 	const user = document.getElementById("userInfoSection");
 	const guest = document.getElementById("stakeHeaderGuest");
 	user.classList.remove("fade-in");
@@ -215,6 +312,22 @@ function enableActionButtons() {
 		btn.disabled = false;
 		btn.classList.remove("locked");
 	});
+
+	const oldBtn = document.getElementById("openClaimPopup");
+	const newBtn = oldBtn.cloneNode(true);
+	newBtn.id = "openClaimPopup";
+	oldBtn.replaceWith(newBtn);
+
+	newBtn.disabled = false;
+	newBtn.addEventListener("click", async (e) => {
+	e.preventDefault();
+	e.stopPropagation();
+	await updateClaimSupplyInfo();
+	const modal = document.getElementById("claimPopup");
+	modal.style.display = "flex";
+	showModal("claimPopup");
+});
+
 	toggleLockVisuals();
 }
 
@@ -246,7 +359,7 @@ document.getElementById("connectButton").addEventListener("click", async () => {
 				currentProvider = provider;
 			} else {
 				clearInterval(loadingInterval);
-				alert("No wallet detected. Please install a Web3 wallet.");
+				showNotificationWallet("No wallet detected, please install Web3 Wallet", "error");
 				return;
 			}
 			const message = "Sign the message to proceed with Monthera Vault";
@@ -258,15 +371,15 @@ document.getElementById("connectButton").addEventListener("click", async () => {
 			clearInterval(loadingInterval);
 			clearConnectButton();
 			button.innerHTML = `
-  <span id="connectText" style="color: white;">${shortWalletText(userAddress)}</span>
-  <span id="connectIcon" style="margin-left: 6px;">
-  <svg xmlns="http://www.w3.org/2000/svg"
-  fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="white"
-  style="width: 18px; height: 18px;">
-  <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7" />
-  </svg>
-  </span>
-  `;
+		<span id="connectText" style="color: white;">${shortWalletText(userAddress)}</span>
+		<span id="connectIcon" style="margin-left: 6px;">
+		<svg xmlns="http://www.w3.org/2000/svg"
+		fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="white"
+		style="width: 18px; height: 18px;">
+		<path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7" />
+		</svg>
+		</span>
+		`;
 			fadeToUserInfo();
 			await loadContracts();
 			await loadInfo();
@@ -359,8 +472,10 @@ async function updateRewardLoop() {
 async function loadContracts() {
 	const vaultAbi = await fetch("abi/MontheraVaultStakingABI.json").then(res => res.json());
 	const tokenAbi = await fetch("abi/MontheraTokenABI.json").then(res => res.json());
+	const claimAbi = await fetch("abi/MontheraTokenClaimABI.json").then(res => res.json());
 	vaultContract = new ethers.Contract(VAULT_ADDRESS, vaultAbi, signer);
 	tokenContract = new ethers.Contract(TOKEN_ADDRESS, tokenAbi, signer);
+	claimContract = new ethers.Contract(CLAIM_ADDRESS, claimAbi, signer);
 	vaultContractPublic = new ethers.Contract(VAULT_ADDRESS, vaultAbi, publicProvider);
 }
 async function updateVaultPublicStats() {
@@ -390,7 +505,7 @@ async function updateVaultPublicStats() {
 				maximumFractionDigits: 0
 			}) + " ";
 	} catch (err) {
-		console.error("Gagal load statistik publik:", err);
+		console.error("Load public statistic failed:", err);
 	}
 }
 
@@ -420,13 +535,14 @@ async function loadInfo() {
 				minimumFractionDigits: 4,
 				maximumFractionDigits: 4
 			}) + " $MTHR";
+			window.currentPendingReward = rewardVal;
 		document.getElementById("userInfoSection").style.display = "block";
 		const vaultBalanceInfo = document.getElementById("vaultBalanceInfo");
 		if (vaultBalanceInfo) {
 			vaultBalanceInfo.textContent = `${stakedFloored.toLocaleString('en-US', {
-  minimumFractionDigits: 2,
-  maximumFractionDigits: 2
-  })} $sMTHR`;
+	minimumFractionDigits: 2,
+	maximumFractionDigits: 2
+	})} $sMTHR`;
 		}
 		window.currentUserStakeBalance = stakedVal;
 	} catch (err) {
@@ -434,6 +550,44 @@ async function loadInfo() {
 		document.getElementById("balance").textContent = "Loading...";
 		document.getElementById("staked").textContent = "Loading...";
 		document.getElementById("reward").textContent = "Loading...";
+	}
+}
+
+async function updateClaimSupplyInfo() {
+	try {
+		const available = await tokenContract.balanceOf(CLAIM_ADDRESS);
+		const availableFormatted = parseFloat(ethers.utils.formatUnits(available, 18)).toLocaleString();
+		document.getElementById("claimAvailableInfo").textContent = `${availableFormatted} $MTHR`;
+
+		if (!userAddress) {
+			document.getElementById("userClaimInfo").textContent = "0.00 $MTHR";
+		return;
+	}
+
+	const isClaimed = await claimContract.claimed(userAddress);
+	const claimBtn = document.getElementById("tokenClaimBtn");
+
+	if (isClaimed) {
+	document.getElementById("userClaimInfo").textContent = `0.00 $MTHR`;
+	claimBtn.innerHTML = `<span>Claimed</span>`;
+	claimBtn.classList.add("btn-disabled-faded");
+	claimBtn.disabled = true;
+	} else {
+		const claimAmount = await claimContract.CLAIM_AMOUNT();
+		const formatted = parseFloat(ethers.utils.formatUnits(claimAmount, 18)).toLocaleString(undefined, {
+			minimumFractionDigits: 2,
+			maximumFractionDigits: 2
+		});
+
+		document.getElementById("userClaimInfo").textContent = `${formatted} $MTHR`;
+		claimBtn.innerHTML = `Claim`;
+		claimBtn.classList.remove("btn-disabled-faded");
+		claimBtn.disabled = false;
+		}
+	} catch (err) {
+	console.error("loadclaiminfo failed:", err);
+	document.getElementById("claimAvailableInfo").textContent = "N/A";
+	document.getElementById("userClaimInfo").textContent = "N/A";
 	}
 }
 
@@ -486,17 +640,17 @@ document.getElementById("redeemBtn").addEventListener("click", () => {
 	showModal("redeemStep1");
 });
 
-document.getElementById("closeRedeemPopup").addEventListener("click", () => {
+	document.getElementById("closeRedeemPopup").addEventListener("click", () => {
 	hideModal("redeemStep1");
 	resetRedeemInputUI();
 });
 
-let redeemInputErrorTimeout = null;
+	let redeemInputErrorTimeout = null;
 
-const redeemInputEl = document.getElementById("redeemVaultInput");
-const vaultBalanceEl = document.getElementById("vaultBalanceInfo");
+	const redeemInputEl = document.getElementById("redeemVaultInput");
+	const vaultBalanceEl = document.getElementById("vaultBalanceInfo");
 
-redeemInputEl.addEventListener("input", () => {
+	redeemInputEl.addEventListener("input", () => {
 	const current = parseFloat(redeemInputEl.value);
 	const max = parseFloat((vaultBalanceEl.textContent || "0").replace(/,/g, ''));
 	if (!isNaN(current) && !isNaN(max) && current > max) {
@@ -557,7 +711,7 @@ document.getElementById("nextRedeemBtn").addEventListener("click", async () => {
 		document.getElementById("redeemEstimateValue").textContent = `${formatted.toLocaleString()} $MTHR`;
 	} catch (err) {
 		document.getElementById("redeemEstimateValue").textContent = "Estimated Failed";
-		console.error("Estimasi gagal:", err);
+		console.error("Estimated failed:", err);
 	}
 	blockInteraction(750);
 	hideModal("redeemStep1", () => {
@@ -583,11 +737,11 @@ document.getElementById("confirmRedeemFinalBtn").addEventListener("click", async
 	confirmBtn.disabled = true;
 	cancelBtn.disabled = true;
 	confirmBtn.innerHTML = `
-  <div style="display: flex; justify-content: center; align-items: center; width: 100%;">
-  <span>Processing</span>
-  <span id="dots-loading-redeem" style="display: inline-block; width: 1ch; font-family: monospace; margin-left: 0.5px;"></span>
-  </div>
-  `;
+	<div style="display: flex; justify-content: center; align-items: center; width: 100%;">
+	<span>Processing</span>
+	<span id="dots-loading-redeem" style="display: inline-block; width: 1ch; font-family: monospace; margin-left: 0.5px;"></span>
+	</div>
+	`;
 	const dotsEl = document.getElementById("dots-loading-redeem");
 	let dotCount = 0;
 	const maxDots = 3;
@@ -602,10 +756,10 @@ document.getElementById("confirmRedeemFinalBtn").addEventListener("click", async
 		await tx.wait();
 		clearInterval(intervalId);
 		confirmBtn.innerHTML = `
-  <span class="fade-icon small">
-  <i class="fas fa-check-circle"></i>
-  </span>
-  `;
+	<span class="fade-icon small">
+	<i class="fas fa-check-circle"></i>
+	</span>
+	`;
 		setTimeout(async () => {
 			confirmBtn.innerHTML = originalText;
 			confirmBtn.disabled = false;
@@ -620,10 +774,10 @@ document.getElementById("confirmRedeemFinalBtn").addEventListener("click", async
 	} catch (err) {
 		clearInterval(intervalId);
 		confirmBtn.innerHTML = `
-  <span class="fade-icon small">
-  <i class="fas fa-times-circle"></i>
-  </span>
-  `;
+	<span class="fade-icon small">
+	<i class="fas fa-times-circle"></i>
+	</span>
+	`;
 		console.error("Redeem failed:", err);
 		showTxBarNotification("error", "", "redeem");
 		setTimeout(() => {
@@ -640,7 +794,10 @@ async function claim() {
 	const claimBtn = document.getElementById("claimBtn");
 	const stakeBtn = document.getElementById("stakeBtn");
 	const redeemBtn = document.getElementById("redeemBtn");
+	const originalText = claimBtn.innerHTML;
+
 	if (isClaiming) return;
+
 	if (!userAddress) {
 		showNotification("Wallet not found", "error");
 		claimBtn.classList.add("wallet-warning");
@@ -648,65 +805,87 @@ async function claim() {
 	} else {
 		claimBtn.classList.remove("wallet-warning");
 	}
-	isClaiming = true;
-	const originalText = claimBtn.innerHTML;
-	claimBtn.disabled = true;
-	stakeBtn.disabled = true;
-	redeemBtn.disabled = true;
-	claimBtn.innerHTML = `
-  <div style="display: flex; justify-content: center; align-items: center; width: 100%;">
-  <span>Processing</span>
-  <span id="dots-loading" style="display: inline-block; width: 1ch; font-family: monospace; margin-left: 0.5px;"></span>
-  </div>
-  `;
-	const dotsEl = document.getElementById("dots-loading");
-	let dotCount = 0;
-	const maxDots = 3;
-	const intervalId = setInterval(() => {
-		dotCount = (dotCount + 1) % (maxDots + 1);
-		dotsEl.textContent = ".".repeat(dotCount);
-	}, 400);
 
+	let rewardAmount = typeof window.currentPendingReward === "number" ? window.currentPendingReward : null;
+
+	if (rewardAmount === null) {
+		const earned = await vaultContractPublic.earned(userAddress);
+		rewardAmount = parseFloat(ethers.utils.formatUnits(earned, 18));
+	}
+
+	if (rewardAmount <= 0) {
+		showNotification("Insufficient balance", "error");
+		return;
+	}
+
+	let intervalId = null;
 	let showIconSuccess = false;
+	let txSubmitted = false;
+	isClaiming = true;
 
 	try {
-		await new Promise(resolve => setTimeout(resolve, 2000));
-		const earned = await vaultContractPublic.earned(userAddress);
-		const claimedAmount = parseFloat(ethers.utils.formatUnits(earned));
-		if (claimedAmount <= 0) throw new Error("No reward to claim");
-		const tx = await vaultContract.claimReward();
-		await tx.wait();
-		showTxBarNotification("success", tx.hash, "claim");
-		document.getElementById("stakeAmount").value = "";
-		clearInterval(intervalId);
+		claimBtn.disabled = true;
+		stakeBtn.disabled = true;
+		redeemBtn.disabled = true;
 		claimBtn.innerHTML = `
-  <span class="fade-icon small">
-  <i class="fas fa-check-circle"></i>
-  </span>
-  `;
+			<div style="display: flex; justify-content: center; align-items: center; width: 100%;">
+				<span>Processing</span>
+				<span id="dots-loading" style="display: inline-block; width: 1ch; font-family: monospace; margin-left: 0.5px;"></span>
+			</div>
+		`;
+
+		const dotsEl = document.getElementById("dots-loading");
+		let dotCount = 0;
+		const maxDots = 3;
+		intervalId = setInterval(() => {
+			dotCount = (dotCount + 1) % (maxDots + 1);
+			dotsEl.textContent = ".".repeat(dotCount);
+		}, 400);
+
+		const tx = await vaultContract.claimReward();
+		txSubmitted = true;
+
+		await tx.wait();
+		clearInterval(intervalId);
+
+		claimBtn.innerHTML = `
+			<span class="fade-icon small">
+				<i class="fas fa-check-circle"></i>
+			</span>
+		`;
 		showIconSuccess = true;
-		showFlyUpBalance(claimedAmount);
-		showFlyDownReward(claimedAmount);
+		showFlyUpBalance(rewardAmount);
+		showFlyDownReward(rewardAmount);
+		showTxBarNotification("success", tx.hash, "claim");
 		await refreshUI();
+
 	} catch (err) {
 		console.warn("Claim error:", err.message || err);
-		showTxBarNotification("error", "", "claim");
-		clearInterval(intervalId);
+		if (intervalId) clearInterval(intervalId);
+
 		claimBtn.innerHTML = `
-  <span class="fade-icon small">
-  <i class="fas fa-times-circle"></i>
-  </span>
-  `;
-		showIconSuccess = true;
+			<span class="fade-icon small">
+				<i class="fas fa-times-circle"></i>
+			</span>
+		`;
+
+		if (txSubmitted || err.code === 4001) {
+			showTxBarNotification("error", "", "claim");
+		}
 	} finally {
-		const resetTimeout = showIconSuccess ? 2000 : 0;
+		const resetTimeout = showIconSuccess ? 2000 : 2000;
 		setTimeout(() => {
-			claimBtn.innerHTML = originalText;
-			claimBtn.disabled = false;
-			stakeBtn.disabled = false;
-			redeemBtn.disabled = false;
-			isClaiming = false;
-		}, resetTimeout + 100);
+	claimBtn.innerHTML = originalText;
+	claimBtn.disabled = false;
+	stakeBtn.disabled = false;
+	redeemBtn.disabled = false;
+	isClaiming = false;
+
+	claimBtn.blur();
+	document.activeElement?.blur();
+	const evt = new MouseEvent("mouseup", { bubbles: true });
+	claimBtn.dispatchEvent(evt);
+}, resetTimeout);
 	}
 }
 
@@ -819,6 +998,15 @@ function showNotification(message, type = "success") {
 	}, 2000);
 }
 
+function showNotificationWallet(message, type = "success") {
+	const notif = document.getElementById("notification-wallet");
+	notif.textContent = message;
+	notif.className = `z-50 text-sm ${type} visible`;
+	setTimeout(() => {
+		notif.classList.remove("visible");
+	}, 2000);
+}
+
 function showTxBarNotification(status = "success", txHash = "", type = "") {
 	const bar = document.getElementById("txNotificationBar");
 	const statusText = document.getElementById("txNotifStatus");
@@ -864,9 +1052,9 @@ async function updateRewardRateUI() {
 function clearConnectButton() {
 	const button = document.getElementById("connectButton");
 	button.innerHTML = `
-  <span id="connectText">Connect Wallet</span>
-  <span id="connectIcon"></span>
-  `;
+	<span id="connectText">Connect Wallet</span>
+	<span id="connectIcon"></span>
+	`;
 }
 
 function fillDepositPercentage(pct) {
@@ -1025,11 +1213,11 @@ document.getElementById("confirmDepositBtn").addEventListener("click", async () 
 	confirmBtn.disabled = true;
 	cancelBtn.disabled = true;
 	confirmBtn.innerHTML = `
-  <div style="display: flex; justify-content: center; align-items: center; width: 100%;">
-  <span>Processing</span>
-  <span id="dots-loading-deposit" style="display: inline-block; width: 1ch; font-family: monospace; margin-left: 0.5px;"></span>
-  </div>
-  `;
+	<div style="display: flex; justify-content: center; align-items: center; width: 100%;">
+	<span>Processing</span>
+	<span id="dots-loading-deposit" style="display: inline-block; width: 1ch; font-family: monospace; margin-left: 0.5px;"></span>
+	</div>
+	`;
 	const dotsEl = document.getElementById("dots-loading-deposit");
 	let dotCount = 0;
 	const maxDots = 3;
@@ -1048,10 +1236,10 @@ document.getElementById("confirmDepositBtn").addEventListener("click", async () 
 		await depositTx.wait();
 		clearInterval(intervalId);
 		confirmBtn.innerHTML = `
-  <span class="fade-icon small">
-  <i class="fas fa-check-circle"></i>
-  </span>
-  `;
+	<span class="fade-icon small">
+	<i class="fas fa-check-circle"></i>
+	</span>
+	`;
 		setTimeout(async () => {
 			confirmBtn.innerHTML = originalText;
 			confirmBtn.disabled = false;
@@ -1066,10 +1254,10 @@ document.getElementById("confirmDepositBtn").addEventListener("click", async () 
 	} catch (err) {
 		clearInterval(intervalId);
 		confirmBtn.innerHTML = `
-  <span class="fade-icon small">
-  <i class="fas fa-times-circle"></i>
-  </span>
-  `;
+	<span class="fade-icon small">
+	<i class="fas fa-times-circle"></i>
+	</span>
+	`;
 		console.error("Deposit failed:", err);
 		showTxBarNotification("error", "", "deposit");
 		setTimeout(() => {
@@ -1304,3 +1492,18 @@ sidebar.addEventListener('click', (e) => {
 document.addEventListener('click', () => {
 	sidebar.classList.remove('show');
 });
+
+document.querySelectorAll("button").forEach(btn => {
+	btn.addEventListener("mouseup", () => {
+	btn.classList.remove("clicked");
+	});
+	btn.addEventListener("mouseleave", () => {
+	btn.classList.remove("clicked");
+	});
+});
+
+setInterval(() => {
+	if (window.ethereum && window.ethereum.selectedAddress) {
+		refreshContracts();
+	}
+}, 1500);
