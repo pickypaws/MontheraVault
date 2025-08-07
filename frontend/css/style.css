@@ -108,7 +108,7 @@ body {
   box-shadow: 0 0 12px rgba(165, 180, 252, 0.3);
   border-radius: 10px;
   padding-top: 10px;
-  height: 273px;
+  height: 322px;
   z-index: 10;
   overflow-y: auto;
   transform: translateX(-100%);
@@ -123,7 +123,8 @@ body {
   pointer-events: auto;
 }
 
-.sidebar a {
+.sidebar a,
+.sidebar button {
   display: block;
   padding: 10px 20px;
   color: #ffffff;
@@ -143,6 +144,12 @@ body {
 
 .sidebar a:hover {
   background: rgba(165, 180, 252, 0.1);
+}
+
+#openClaimPopup {
+  display: block;
+  width: 100%;
+  text-align: center;
 }
 
 .wallet-button {
@@ -612,6 +619,14 @@ body {
   text-align: left;
 }
 
+.stat-label-claim-modal {
+  min-width: 130px;
+  font-family: 'Prompt', sans-serif;
+  font-weight: 600;
+  font-size: 0.95rem;
+  text-align: left;
+}
+
 .stat-value-modal {
   display: flex;
   align-items: center;
@@ -629,6 +644,12 @@ body {
 .input-error {
   border: 1px solid red !important;
   outline: none;
+}
+
+.btn-disabled-faded {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
 }
 
 .shake {
@@ -751,23 +772,22 @@ body {
 #notification {
   position: fixed;
   margin-top: -8px;
-  left: 23%;
+  left: 24%;
   transform: translateX(-50%) translateY(10px);
   z-index: 9999;
   background-color: rgba(17, 24, 39, 1);
   border: 1px solid rgba(255, 255, 255, 0.1);
   color: #f3f4f6;
-  padding: 8.5px 15px;
+  padding: 11px 19px;
   border-radius: 12px;
   font-family: 'Prompt', sans-serif;
-  font-weight: medium;
+  font-weight: bold;
   letter-spacing: 0.7px;
-  font-size: 15px;
+  font-size: 15.2px;
   text-align: center;
   min-width: 185px;
   max-width: 90vw;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
-
   opacity: 0;
   transition: opacity 0.3s ease, transform 0.3s ease;
   pointer-events: none;
@@ -785,6 +805,47 @@ body {
 }
 
 #notification.error {
+  border-left: 4px solid #ef4444;
+  color: #fecaca;
+}
+
+#notification-wallet {
+  position: fixed;
+  margin-top: 0px;
+  left: 50%;
+  transform: translateX(-50%) translateY(-10px);
+  z-index: 9999;
+  background-color: rgba(17, 24, 39, 1);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #f3f4f6;
+  padding: 17px 8px;
+  border-radius: 12px;
+  font-family: 'Prompt', sans-serif;
+  font-weight: medium;
+  letter-spacing: 0.7px;
+  font-size: 13.5px;
+  text-align: center;
+  white-space: nowrap;
+  min-width: 185px;
+  max-width: 90vw;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+  opacity: 0;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  pointer-events: none;
+}
+
+#notification-wallet.visible {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+  pointer-events: auto;
+}
+
+#notification-wallet.success {
+  border-left: 4px solid #22c55e;
+  color: #bbf7d0;
+}
+
+#notification-wallet.error {
   border-left: 4px solid #ef4444;
   color: #fecaca;
 }
@@ -1147,7 +1208,7 @@ body {
   box-shadow: 0 0 12px rgba(165, 180, 252, 0.3);
   border-radius: 10px;
   padding-top: 10px;
-  height: 273px;
+  height: 322px;
   z-index: 10;
   overflow-y: auto;
   transform: translateX(-100%);
@@ -1162,7 +1223,8 @@ body {
   pointer-events: auto;
 }
 
-.sidebar a {
+.sidebar a,
+.sidebar button {
   display: block;
   padding: 10px 20px;
   color: #ffffff;
@@ -1182,6 +1244,12 @@ body {
 
 .sidebar a:hover {
   background: rgba(165, 180, 252, 0.1);
+}
+
+#openClaimPopup {
+  display: block;
+  width: 100%;
+  text-align: center;
 }
 
 .wallet-button {
@@ -1646,6 +1714,14 @@ body {
   text-align: left;
 }
 
+.stat-label-claim-modal {
+  min-width: 130px;
+  font-family: 'Prompt', sans-serif;
+  font-weight: 600;
+  font-size: 0.95rem;
+  text-align: left;
+}
+
 .stat-value-modal {
   display: flex;
   align-items: center;
@@ -1663,6 +1739,12 @@ body {
 .input-error {
   border: 1px solid red !important;
   outline: none;
+}
+
+.btn-disabled-faded {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
 }
 
 .shake {
@@ -1791,7 +1873,7 @@ body {
   background-color: rgba(17, 24, 39, 1);
   border: 1px solid rgba(255, 255, 255, 0.1);
   color: #f3f4f6;
-  padding: 8.5px 15px;
+  padding: 11px 19px;
   border-radius: 12px;
   font-family: 'Prompt', sans-serif;
   font-weight: medium;
