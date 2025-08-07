@@ -22,7 +22,7 @@ Staking and Reward Mechanism
 
 To participate in staking, users must first acquire $MTHR tokens via available liquidity pools on supported DEX platforms. Once they hold $MTHR, they may stake it into Monthera Vault to begin earning rewards.
 
-The vault operates on a fixed reward rate of 1.1902 $MTHR per second, which is distributed proportionally among stakers. The rewards are funded entirely from the 85% pre-minted token supply stored inside the vault.
+The vault operates on a fixed reward rate of 3.1902 $MTHR per second, which is distributed proportionally among stakers. The rewards are funded entirely from the 85% pre-minted token supply stored inside the vault.
 
 Vault Token and Transferability
 
