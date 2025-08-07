@@ -781,8 +781,8 @@ body {
   padding: 11px 19px;
   border-radius: 12px;
   font-family: 'Prompt', sans-serif;
-  font-weight: bold;
-  letter-spacing: 0.7px;
+  font-weight: medium;
+  letter-spacing: 0px;
   font-size: 15.2px;
   text-align: center;
   min-width: 185px;
@@ -1877,8 +1877,8 @@ body {
   border-radius: 12px;
   font-family: 'Prompt', sans-serif;
   font-weight: medium;
-  letter-spacing: 0.7px;
-  font-size: 15px;
+  letter-spacing: 0px;
+  font-size: 15.2px;
   text-align: center;
   min-width: 185px;
   max-width: 90vw;
@@ -2081,19 +2081,14 @@ button *:active {
 }
 
 button {
-  transition: transform 0.1s ease-in-out;
+  transition: transform 0.1s ease-in-out, filter 0.1s ease-in-out, box-shadow 0.1s ease-in-out;
 }
 
-button:active:not(:disabled):not(.disabled):not(.loading):not(.success):not(.error) {
-  transform: scale(0.95);
-}
-
-button {
-  transition: transform 0.1s ease-in-out;
-}
-
+button:active:not(:disabled):not(.disabled):not(.loading):not(.success):not(.error),
 button.clicked {
-  transform: scale(0.95);
+  transform: none !important;
+  filter: none !important;
+  box-shadow: none !important;
 }
 
 button .wallet-address {
